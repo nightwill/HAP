@@ -1,6 +1,7 @@
 import Foundation
 import Logging
 import HAP
+import SwiftyGPIO
 
 fileprivate let logger = Logger(label: "bridge")
 
@@ -110,7 +111,13 @@ logger.info("Initializing the server...")
 let timer = DispatchSource.makeTimerSource()
 timer.schedule(deadline: .now() + .seconds(1), repeating: .seconds(5))
 timer.setEventHandler(handler: {
-    livingRoomLightbulb.lightbulb.powerState.value = !(livingRoomLightbulb.lightbulb.powerState.value ?? false)
+    let gpios = SwiftyGPIO.GPIOs(for: .OrangePiZero)
+    guard let gpio = gpios[.P16] else { return }
+    gpio.direction = .OUT
+    gpio.value = 1
+    sleep(1)
+    gpio.value = 0
+    //livingRoomLightbulb.lightbulb.powerState.value = !(livingRoomLightbulb.lightbulb.powerState.value ?? false)
 })
 timer.resume()
 
