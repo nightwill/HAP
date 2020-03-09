@@ -76,8 +76,12 @@ class MyDeviceDelegate: DeviceDelegate {
                            ofAccessory accessory: Accessory,
                            didChangeValue newValue: T?) {
         print(characteristic.value)
-        if accessory.serialNumber == lockSerialNumber, let value = newValue as? UInt8, value > 0 {
-            openIntercomDoor()
+        if accessory.serialNumber == lockSerialNumber, let value = newValue as? UInt8 {
+            if value > 0 {
+                openIntercomDoor()
+            } else {
+                closeIntercomDoor()
+            }
         }
         logger.info("Characteristic \(characteristic) in service \(service.type) of accessory \(accessory.info.name.value ?? "") did change: \(String(describing: newValue))")
     }
