@@ -25,14 +25,28 @@ if CommandLine.arguments.contains("--recreate") {
 let livingRoomLightbulb = Accessory.Lightbulb(info: Service.Info(name: "Living Room", serialNumber: "00002"))
 let bedroomNightStand = Accessory.Lightbulb(info: Service.Info(name: "Bedroom", serialNumber: "00003"))
 
+let lockSerialNumber = "00005"
+let door = Accessory.Door(info: Service.Info(name: "Intercome", serialNumber: lockSerialNumber))
+
+func openIntercomDoor() {
+    let gpios = SwiftyGPIO.GPIOs(for: .OrangePiZero)
+    guard let gpio = gpios[.P16] else { return }
+    gpio.direction = .OUT
+    gpio.value = 1
+    sleep(2)
+    gpio.value = 0
+    door.door.currentPosition.value = 0
+    print("Hooraryy opened!!!")
+}
+
 let device = Device(
-    bridgeInfo: Service.Info(name: "Bridge", serialNumber: "00001"),
+    bridgeInfo: Service.Info(name: "Intercom", serialNumber: "00001"),
     setupCode: "123-44-321",
     storage: storage,
     accessories: [
-        livingRoomLightbulb,
-        bedroomNightStand
-//        Accessory.Door(info: Service.Info(name: "Front Door", serialNumber: "00005")),
+//        livingRoomLightbulb,
+//        bedroomNightStand
+        Accessory.Door(info: Service.Info(name: "Intercome", serialNumber: lockSerialNumber)),
 //        Accessory.Switch(info: Service.Info(name: "Garden Lights", serialNumber: "00006")),
 //        Accessory.Thermostat(info: Service.Info(name: "Living Room Thermostat", serialNumber: "00007")),
 //        Accessory.Thermometer(info: Service.Info(name: "Office Thermometer", serialNumber: "00008")),
@@ -54,6 +68,10 @@ class MyDeviceDelegate: DeviceDelegate {
                            ofService service: Service,
                            ofAccessory accessory: Accessory,
                            didChangeValue newValue: T?) {
+        print(characteristic.value)
+        if accessory.serialNumber == lockSerialNumber, let value = newValue as? UInt8, value > 0 {
+            openIntercomDoor()
+        }
         logger.info("Characteristic \(characteristic) in service \(service.type) of accessory \(accessory.info.name.value ?? "") did change: \(String(describing: newValue))")
     }
 
@@ -111,12 +129,7 @@ logger.info("Initializing the server...")
 let timer = DispatchSource.makeTimerSource()
 timer.schedule(deadline: .now() + .seconds(1), repeating: .seconds(5))
 timer.setEventHandler(handler: {
-    let gpios = SwiftyGPIO.GPIOs(for: .OrangePiZero)
-    guard let gpio = gpios[.P16] else { return }
-    gpio.direction = .OUT
-    gpio.value = 1
-    sleep(1)
-    gpio.value = 0
+
     //livingRoomLightbulb.lightbulb.powerState.value = !(livingRoomLightbulb.lightbulb.powerState.value ?? false)
 })
 timer.resume()
