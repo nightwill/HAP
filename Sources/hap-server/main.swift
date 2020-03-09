@@ -33,10 +33,17 @@ func openIntercomDoor() {
     guard let gpio = gpios[.P16] else { return }
     gpio.direction = .OUT
     gpio.value = 1
-    sleep(2)
+    door.door.currentPosition.value = 100
+    logger.info("Hooraryy opened!!!")
+}
+
+func closeIntercomDoor() {
+    let gpios = SwiftyGPIO.GPIOs(for: .OrangePiZero)
+    guard let gpio = gpios[.P16] else { return }
+    gpio.direction = .OUT
     gpio.value = 0
     door.door.currentPosition.value = 0
-    print("Hooraryy opened!!!")
+    logger.info("Hooraryy closed!!!")
 }
 
 let device = Device(
